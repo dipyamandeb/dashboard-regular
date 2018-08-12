@@ -1,0 +1,4 @@
+com/dashboard/error/MyAccessDeniedHandler.class
+com/dashboard/SpringBootWebApplication.class
+com/dashboard/config/SpringSecurityConfig.class
+com/dashboard/controller/DefaultController.class
