@@ -12,8 +12,13 @@
 </head>
 <body>
 <div class="container">
-    <h1>Spring Security User Registration with Hibernate and Thymeleaf</h1>
+    <h1>Dashboard Implementation</h1>
 </div>
+	<h1 th:inline="text">Hello [[${#httpServletRequest.remoteUser}]]!</h1>
+        <form th:action="@{/logout}" method="post">
+            <input type="submit" value="Sign Out"/>
+      	 </form>
+	
 
 <script type="text/javascript" th:src="@{/webjars/jquery/3.2.1/jquery.min.js/}"></script>
 <script type="text/javascript" th:src="@{/webjars/bootstrap/3.3.7/js/bootstrap.min.js}"></script>

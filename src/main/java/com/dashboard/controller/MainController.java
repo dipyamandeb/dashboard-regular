@@ -16,9 +16,20 @@ public class MainController {
     public String login(Model model) {
         return "login";
     }
+    
+    @GetMapping("/logout")
+    public String logout(Model model) {
+        return "login";
+    }
 
+    
+    
     @GetMapping("/user")
     public String userIndex() {
         return "user/index";
+    }
+    @GetMapping("/403")
+    public String error403() {
+        return "error/403";
     }
 }
