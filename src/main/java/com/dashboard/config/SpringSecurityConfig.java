@@ -1,11 +1,19 @@
 package com.dashboard.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import com.dashboard.service.UserService;
+
+
 
 @Configuration
 // http://docs.spring.io/spring-boot/docs/current/reference/html/howto-security.html
@@ -15,47 +23,54 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private AccessDeniedHandler accessDeniedHandler;
+    @Autowired
+    private UserService userService;
 
-    // roles admin allow to access /admin/**
-    // roles user allow to access /user/**
-    // custom 403 access denied handler
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
-        http.csrf().disable()
+        http
                 .authorizeRequests()
-                .antMatchers("/", "/home", "/about").permitAll()
-                .antMatchers("/admin/**").hasAnyRole("ADMIN")
-                .antMatchers("/user/**").hasAnyRole("USER")
-                .anyRequest().authenticated()
+                    .antMatchers(
+                            "/registration**",
+                            "/js/**",
+                            "/css/**",
+                            "/img/**",
+                            "/webjars/**",
+                            "/console/**").permitAll()
+                    .anyRequest().authenticated()
                 .and()
-                .formLogin()
-                .loginPage("/login")
-                .permitAll()
+                    .formLogin()
+                        .loginPage("/login")
+                            .permitAll()
                 .and()
-                .logout()
-                .permitAll()
-                .and()
-                .exceptionHandling().accessDeniedHandler(accessDeniedHandler);
+                    .logout()
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .logoutSuccessUrl("/login?logout")
+                .permitAll();
+        http.exceptionHandling().accessDeniedHandler(accessDeniedHandler);
+        http.csrf().disable();
+
+        http.headers().frameOptions().disable();
+    
     }
 
-
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-
-        auth.inMemoryAuthentication()
-                .withUser("user").password("password").roles("USER")
-                .and()
-                .withUser("admin").password("password").roles("ADMIN");
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
     }
 
-    /*
-    //Spring Boot configured this already.
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(){
+        DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
+        auth.setUserDetailsService(userService);
+        auth.setPasswordEncoder(passwordEncoder());
+        return auth;
+    }
+
     @Override
-    public void configure(WebSecurity web) throws Exception {
-        web
-                .ignoring()
-                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**");
-    }*/
-
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(authenticationProvider());
+    }
 }
